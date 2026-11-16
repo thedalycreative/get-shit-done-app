@@ -1,6 +1,59 @@
-*To read this in a pretty version, press **⌘ + ⇧ + V** (Mac) or **Ctrl + Shift + V** (Windows)*
+# GetStuffDone v3
 
-# GetStuffDone 🚀
+> A full-stack to-do app — Express + MongoDB API with a polished Bootstrap front end — built as teaching material for back-end web development.
+
+**Live demo:** [get-stuff-done-v3.vercel.app](https://get-stuff-done-v3.vercel.app)
+
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square) ![Express](https://img.shields.io/badge/Express-000000?style=flat-square) ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square) ![Mongoose](https://img.shields.io/badge/Mongoose-880000?style=flat-square) ![Bootstrap 5](https://img.shields.io/badge/Bootstrap%205-7952B3?style=flat-square) ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square)
+
+## Features
+
+- Task dashboard: add, edit (modal), complete, delete and filter (All / Active / Completed) with a progress bar
+- REST API: `GET/POST /api/tasks`, `GET/PUT/DELETE /api/tasks/:id`, plus `/api/health`
+- Contact form that emails via Nodemailer + Gmail App Password
+- Marketing pages: landing, pricing, contact, login/register (front-end only), privacy and 404
+- **Demo mode** — when no database is configured the API returns 503 and the dashboard transparently stores tasks in `localStorage`, so the live demo is fully usable
+
+## Tech stack
+
+- Node.js, Express 4, Mongoose 8 (MongoDB Atlas), Nodemailer
+- Bootstrap 5.3, Material Symbols, Lordicon, vanilla JavaScript
+- Vercel: static `public/` + Express as a serverless function (`api/index.js`)
+
+## Run it locally
+
+```bash
+git clone https://github.com/thedalycreative/get-stuff-done-v3.git
+cd get-stuff-done-v3
+cp .env.example .env   # add MONGO_URI (and Gmail creds for the contact form)
+npm install
+npm run dev            # http://localhost:3000  ·  dashboard: /dashboard
+npm start              # production-style run without nodemon
+```
+
+## Deployment (Vercel)
+
+One Vercel project (**get-stuff-done-v3**, linked to `main`) serves both halves — see `vercel.json`:
+
+- `public/` is the output directory (clean URLs, so `/dashboard` works)
+- `/api/*` is rewritten to `api/index.js`, which exports the Express app from `server/app.js`
+- Set `MONGO_URI` (and optionally `GMAIL_USER`, `GMAIL_PASS`, `MAIL_RECIPIENT`) in Project → Settings → Environment Variables to switch from demo mode to a real database.
+
+Full walkthrough in [DEPLOY.md](DEPLOY.md).
+
+## Screenshots
+
+![GetStuffDone v3 demo](docs/screenshots/demo.gif)
+
+<p align="center">
+  <img src="docs/screenshots/desktop.jpg" alt="Landing page" width="560">
+  <img src="docs/screenshots/dashboard.jpg" alt="Task dashboard (demo mode)" width="560">
+  <img src="docs/screenshots/mobile.jpg" alt="Landing page on a phone" width="260">
+</p>
+
+_Captured from the live site (https://get-stuff-done-v3.vercel.app). Regenerate with any headless browser; files live in `docs/screenshots/`._
+
+---
 
 A full-stack to-do list application built as learning material for **Introduction to Back-End Web Development**.
 
@@ -326,3 +379,7 @@ Students will learn:
 
 ---
 <!--  Built for EQC Institute of Technology by Intake 25g   -->
+
+---
+
+Built by [The Daly Creative](https://www.thedalycreative.com) · Perth, WA
