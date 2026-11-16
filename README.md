@@ -1,8 +1,8 @@
-# GetStuffDone v3
+# Get Shit Done App
 
 > A full-stack to-do app — Express + MongoDB API with a polished Bootstrap front end — built as teaching material for back-end web development.
 
-**Live demo:** [get-stuff-done-v3.vercel.app](https://get-stuff-done-v3.vercel.app)
+**Live demo:** [get-shit-done-app.vercel.app](https://get-shit-done-app.vercel.app)
 
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square) ![Express](https://img.shields.io/badge/Express-000000?style=flat-square) ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square) ![Mongoose](https://img.shields.io/badge/Mongoose-880000?style=flat-square) ![Bootstrap 5](https://img.shields.io/badge/Bootstrap%205-7952B3?style=flat-square) ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square)
 
@@ -23,8 +23,8 @@
 ## Run it locally
 
 ```bash
-git clone https://github.com/thedalycreative/get-stuff-done-v3.git
-cd get-stuff-done-v3
+git clone https://github.com/thedalycreative/get-shit-done-app.git
+cd get-shit-done-app
 cp .env.example .env   # add MONGO_URI (and Gmail creds for the contact form)
 npm install
 npm run dev            # http://localhost:3000  ·  dashboard: /dashboard
@@ -33,7 +33,7 @@ npm start              # production-style run without nodemon
 
 ## Deployment (Vercel)
 
-One Vercel project (**get-stuff-done-v3**, linked to `main`) serves both halves — see `vercel.json`:
+One Vercel project (**get-shit-done-app**, linked to `main`) serves both halves — see `vercel.json`:
 
 - `public/` is the output directory (clean URLs, so `/dashboard` works)
 - `/api/*` is rewritten to `api/index.js`, which exports the Express app from `server/app.js`
@@ -43,7 +43,7 @@ Full walkthrough in [DEPLOY.md](DEPLOY.md).
 
 ## Screenshots
 
-![GetStuffDone v3 demo](docs/screenshots/demo.gif)
+![Get Shit Done App demo](docs/screenshots/demo.gif)
 
 <p align="center">
   <img src="docs/screenshots/desktop.jpg" alt="Landing page" width="560">
@@ -51,7 +51,7 @@ Full walkthrough in [DEPLOY.md](DEPLOY.md).
   <img src="docs/screenshots/mobile.jpg" alt="Landing page on a phone" width="260">
 </p>
 
-_Captured from the live site (https://get-stuff-done-v3.vercel.app). Regenerate with any headless browser; files live in `docs/screenshots/`._
+_Captured from the live site (https://get-shit-done-app.vercel.app). Regenerate with any headless browser; files live in `docs/screenshots/`._
 
 ---
 

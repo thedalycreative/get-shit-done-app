@@ -22,7 +22,7 @@ Add these in **Project → Settings → Environment Variables**, then redeploy:
 | `MONGO_URI` | MongoDB Atlas connection string (allow access from `0.0.0.0/0` for serverless) |
 | `GMAIL_USER`, `GMAIL_PASS`, `MAIL_RECIPIENT` | Contact form email via a Gmail App Password |
 
-Check it worked: `https://<your-project>.vercel.app/api/health` returns `{"ok":true,"db":true}` once a task request has connected.
+Check it worked: `https://get-shit-done-app.vercel.app/api/health` returns `{"ok":true,"db":true}` once a task request has connected.
 
 ## Running locally
 ```bash

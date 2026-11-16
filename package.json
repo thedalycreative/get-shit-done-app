@@ -1,5 +1,5 @@
 {
-  "name": "getshitdone",
+  "name": "get-shit-done-app",
   "version": "3.0.0",
   "description": "GetShitDone - A full-stack to-do app for learning back-end web development",
   "main": "server/index.js",
