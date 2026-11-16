@@ -5,13 +5,98 @@
    USED ON: dashboard.html, create-list.html, list-details.html
    ============================================ */
 
-// Base URL for all task API calls
-// Change this to your live Render/Backend URL once deployed!
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? '' 
-    : 'https://get-shit-done-v3.onrender.com'; // YOUR_RENDER_URL_HERE
-
+// The API is served from the same origin: Express locally, a Vercel function in production.
+// If you host the back end elsewhere (e.g. Render), set API_BASE to that URL.
+const API_BASE = '';
 const API_URL = `${API_BASE}/api/tasks`;
+
+
+// ============================================
+// DATA LAYER — real API with an in-browser demo fallback
+// If the API can't be reached (no database configured on the live demo),
+// tasks are stored in localStorage so every feature still works.
+// ============================================
+
+const DEMO_KEY = 'gsd-demo-tasks';
+let demoMode = false;
+
+function demoTasks() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(DEMO_KEY));
+        if (Array.isArray(saved)) return saved;
+    } catch (e) { /* ignore */ }
+    const day = n => new Date(Date.now() + n * 864e5).toISOString().split('T')[0];
+    const seed = [
+        { title: 'Plan sprint goals', description: 'Pick the top 3 outcomes for the week', dueDate: day(1), completed: false },
+        { title: 'Review pull request #42', description: 'Auth middleware refactor', dueDate: day(0), completed: true },
+        { title: 'Write API docs', description: 'Document the /api/tasks endpoints', dueDate: day(3), completed: false },
+        { title: 'Book dentist', description: 'Before the end of the month', dueDate: day(9), completed: false },
+    ].map((t, i) => ({ ...t, _id: 'demo-' + (i + 1), dateCreated: new Date(Date.now() - i * 6e4).toISOString() }));
+    localStorage.setItem(DEMO_KEY, JSON.stringify(seed));
+    return seed;
+}
+function saveDemo(tasks) { localStorage.setItem(DEMO_KEY, JSON.stringify(tasks)); }
+
+function demoRequest(method, id, body) {
+    let tasks = demoTasks();
+    const find = () => tasks.find(t => t._id === id);
+    switch (method) {
+        case 'GET':
+            if (!id) return tasks.slice().sort((a, b) => b.dateCreated.localeCompare(a.dateCreated));
+            if (!find()) throw new Error('Task not found');
+            return find();
+        case 'POST': {
+            if (!body.title) throw new Error('Title is required');
+            const task = { _id: 'demo-' + Date.now(), completed: false, dateCreated: new Date().toISOString(), ...body };
+            tasks.push(task); saveDemo(tasks); return task;
+        }
+        case 'PUT': {
+            const t = find(); if (!t) throw new Error('Task not found');
+            Object.assign(t, body); saveDemo(tasks); return t;
+        }
+        case 'DELETE':
+            tasks = tasks.filter(t => t._id !== id); saveDemo(tasks); return null;
+    }
+}
+
+function enableDemoMode() {
+    if (demoMode) return;
+    demoMode = true;
+    const list = document.getElementById('task-list');
+    if (list && !document.getElementById('demo-banner')) {
+        const b = document.createElement('div');
+        b.id = 'demo-banner';
+        b.className = 'mb-3';
+        b.style.cssText = 'font-size:.85rem;padding:.6rem .9rem;border-radius:10px;border:1px solid rgba(250,204,21,.35);background:rgba(250,204,21,.08);color:#fde68a;';
+        b.innerHTML = '<span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle;">science</span> Demo mode — no database is connected, so tasks are saved in this browser only.';
+        list.parentNode.insertBefore(b, list);
+    }
+}
+
+async function apiRequest(method, id, body) {
+    if (!demoMode) {
+        let res;
+        try {
+            res = await fetch(id ? `${API_URL}/${id}` : API_URL, {
+                method,
+                headers: body ? { 'Content-Type': 'application/json' } : undefined,
+                body: body ? JSON.stringify(body) : undefined,
+            });
+        } catch (networkErr) {
+            res = null;
+        }
+        const isJson = res && (res.headers.get('content-type') || '').includes('application/json');
+        if (res && isJson && res.status !== 503) {
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.message || 'Request failed');
+            }
+            return method === 'DELETE' ? null : res.json();
+        }
+        enableDemoMode(); // API missing, offline, or DB not configured
+    }
+    return demoRequest(method, id, body);
+}
 
 
 // ============================================
@@ -25,10 +110,7 @@ async function loadTasks() {
     if (!container) return;
 
     try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error('Failed to fetch tasks');
-
-        const tasks = await response.json();
+        const tasks = await apiRequest('GET');
 
         // Get the current filter (all, active, completed)
         const filter = document.querySelector('.filter-tab.active');
@@ -122,25 +204,15 @@ async function addTask(e) {
     if (!title) return;
 
     try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, description: description || title, dueDate })
-        });
-
-        if (response.ok) {
-            titleInput.value = '';
-            if (descInput) descInput.value = '';
-            if (dateInput) dateInput.value = '';
-            showToast('Task added!', 'success');
-            loadTasks();
-        } else {
-            const err = await response.json();
-            showToast(err.message || 'Failed to add task', 'error');
-        }
+        await apiRequest('POST', null, { title, description: description || title, dueDate });
+        titleInput.value = '';
+        if (descInput) descInput.value = '';
+        if (dateInput) dateInput.value = '';
+        showToast('Task added!', 'success');
+        loadTasks();
     } catch (err) {
         console.error(err);
-        showToast('Error adding task', 'error');
+        showToast(err.message || 'Error adding task', 'error');
     }
 }
 
@@ -151,11 +223,7 @@ async function addTask(e) {
 
 async function toggleTask(id, completed) {
     try {
-        await fetch(`${API_URL}/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ completed })
-        });
+        await apiRequest('PUT', id, { completed });
         loadTasks();
     } catch (err) {
         console.error(err);
@@ -170,8 +238,7 @@ async function toggleTask(id, completed) {
 
 async function openEditModal(id) {
     try {
-        const response = await fetch(`${API_URL}/${id}`);
-        const task = await response.json();
+        const task = await apiRequest('GET', id);
 
         // Fill the modal form with current values
         document.getElementById('edit-task-id').value = task._id;
@@ -204,19 +271,10 @@ async function saveEdit(e) {
     if (!title) return;
 
     try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, description: description || title, dueDate })
-        });
-
-        if (response.ok) {
-            closeEditModal();
-            showToast('Task updated!', 'success');
-            loadTasks();
-        } else {
-            showToast('Failed to update task', 'error');
-        }
+        await apiRequest('PUT', id, { title, description: description || title, dueDate });
+        closeEditModal();
+        showToast('Task updated!', 'success');
+        loadTasks();
     } catch (err) {
         console.error(err);
         showToast('Error updating task', 'error');
@@ -237,14 +295,9 @@ async function deleteTask(id) {
             await new Promise(resolve => setTimeout(resolve, 300));
         }
 
-        const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-
-        if (response.ok) {
-            showToast('Task deleted', 'success');
-            loadTasks();
-        } else {
-            showToast('Error deleting task', 'error');
-        }
+        await apiRequest('DELETE', id);
+        showToast('Task deleted', 'success');
+        loadTasks();
     } catch (err) {
         console.error(err);
         showToast('Error deleting task', 'error');

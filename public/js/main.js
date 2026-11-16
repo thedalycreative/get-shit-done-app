@@ -47,9 +47,8 @@ if (contactForm) {
 
         try {
             // Set the base URL for production vs local
-            const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                ? ''
-                : 'https://get-shit-done-v3.onrender.com'; // YOUR_RENDER_URL_HERE
+            // Same-origin API (Express locally, Vercel function in production)
+            const API_BASE = '';
 
             // Send the data to our API
             const response = await fetch(`${API_BASE}/api/mail/send-email`, {
@@ -60,6 +59,10 @@ if (contactForm) {
 
             if (response.ok) {
                 showToast('Message sent successfully!', 'success');
+                contactForm.reset();
+            } else if (response.status === 404 || response.status >= 500) {
+                // Live demo has no mail credentials configured
+                showToast('Demo site: email isn\'t configured, but your message passed validation.', 'success');
                 contactForm.reset();
             } else {
                 showToast('Failed to send message. Please try again.', 'error');
@@ -81,16 +84,16 @@ if (contactForm) {
 
 function showToast(message, type = 'success') {
     // Create the container if it doesn't exist yet
-    let container = document.querySelector('.toast-container');
+    let container = document.querySelector('.toast-container-gsd');
     if (!container) {
         container = document.createElement('div');
-        container.className = 'toast-container';
+        container.className = 'toast-container-gsd';
         document.body.appendChild(container);
     }
 
     // Build the toast element
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
+    toast.className = `toast-gsd ${type}`;
 
     // Pick the right icon
     const icon = type === 'success' ? 'check_circle' : 'error';

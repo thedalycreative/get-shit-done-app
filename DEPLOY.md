@@ -1,55 +1,32 @@
 # Deployment Guide 🚀
 
-To get **GetShitDone** live, follow these steps. This project uses a **Split Deployment** architecture:
--   **Front-End**: Hosted on **GitHub Pages** (Static)
--   **Back-End**: Hosted on **Render.com** (Live Express Server)
+GetShitDone deploys to **Vercel** as one project: the `public/` folder is served as static files and the Express API runs as a serverless function.
 
----
+| Path | What serves it |
+|------|----------------|
+| `/`, `/dashboard`, `/contact` … | Static files from `public/` (`cleanUrls` drops the `.html`) |
+| `/api/*` | `api/index.js` → the Express app in `server/app.js` |
 
-## 1. Prepare GitHub
-1.  **Commit and Push** your changes to GitHub.
-    ```bash
-    git add .
-    git commit -m "Prepare for deployment"
-    git push origin main
-    ```
-2.  Wait for the **GitHub Action** to finish (check the **Actions** tab in your repo).
-3.  Go to **Settings > Pages** in your repo:
-    -   **Source**: Deploy from a branch.
-    -   **Branch**: Select `gh-pages` and `/root`.
-    -   **Save**. Your frontend is now live at `https://<your-username>.github.io/<repo-name>/`!
+## 1. Import the repo
+1. In Vercel, **Add New → Project** and import this repository.
+2. Framework preset: **Other**. Leave the build command empty. Output directory: `public` (already set in `vercel.json`).
+3. Deploy. Every push to `main` creates a new production deployment.
 
----
+## 2. (Optional) Connect a real database and email
+Without these the live site runs in **demo mode**: the API answers `503` and the dashboard stores tasks in the browser's `localStorage`, so every feature still works.
 
-## 2. Deploy Back-End to [Render.com](https://render.com)
-1.  Create a **New > Web Service**.
-2.  Connect your GitHub repository.
-3.  **Runtime**: `Node`
-4.  **Root Directory**: leave blank (top-level)
-5.  **Build Command**: `npm install`
-6.  **Start Command**: `npm start`
-7.  **Environment Variables**:
-    -   Click **Advanced** and add your `.env` variables:
-        -   `MONGO_URI`
-        -   `GMAIL_USER`
-        -   `GMAIL_PASS`
-        -   `MAIL_RECIPIENT`
-8.  **Deploy**. Render will give you a URL like `https://getshitdone-backend.onrender.com`.
+Add these in **Project → Settings → Environment Variables**, then redeploy:
 
----
+| Variable | Purpose |
+|----------|---------|
+| `MONGO_URI` | MongoDB Atlas connection string (allow access from `0.0.0.0/0` for serverless) |
+| `GMAIL_USER`, `GMAIL_PASS`, `MAIL_RECIPIENT` | Contact form email via a Gmail App Password |
 
-## 3. Link Them Together
-1.  Copy your live **Render URL**.
-2.  Open `public/js/app.js` and `public/js/main.js`.
-3.  Find `API_BASE` and replace the placeholder with your **Render URL**.
-4.  **Push** to GitHub again:
-    ```bash
-    git add .
-    git commit -m "Add live backend URL"
-    git push origin main
-    ```
+Check it worked: `https://<your-project>.vercel.app/api/health` returns `{"ok":true,"db":true}` once a task request has connected.
 
----
-
-## Why this way?
-GitHub Pages is fantastic for free static hosting (HTML/CSS/JS), but it **cannot run Node.js/Express code**. By hosting the logic on Render and the site on GitHub, you get a professional, fast, and free production environment!
+## Running locally
+```bash
+cp .env.example .env   # fill in MONGO_URI etc.
+npm install
+npm run dev            # http://localhost:3000
+```

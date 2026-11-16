@@ -18,6 +18,11 @@ router.post("/send-email", async (req, res) => {
     try {
         const { name, email, message } = req.body;
 
+        // Live demo: no mail credentials configured → fail fast so the UI can explain
+        if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS || !process.env.MAIL_RECIPIENT) {
+            return res.status(503).json({ message: "Email is not configured on this deployment" });
+        }
+
         // Set up the Gmail transporter (uses App Password, not real password)
         const transporter = nodemailer.createTransport({
             service: "gmail",
